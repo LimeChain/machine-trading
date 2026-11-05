@@ -63,11 +63,13 @@ After a maintainer freezes a local release:
 
 ```sh
 mtx evaluate --task atomic-arb \
-  --release work/scenario-set/release \
   --agent codex --model openai/gpt-6.1-terra --effort high \
   --jobs-dir work/amm-results --job-name terra-three-scenarios-001
 python3 -m json.tool work/amm-results/terra-three-scenarios-001/report.json
 ```
+
+The task manifest selects the default local release and pins its three-scenario
+fixture set by hash. Use `--release PATH` to select another validated release.
 
 Use `target/debug/mtx` if the new CLI has not been installed. Docker must have
 12 CPUs and approximately 8 GiB available. The model develops once; subsequent

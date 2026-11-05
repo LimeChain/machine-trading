@@ -13,6 +13,9 @@ name = "Machine Trading contributors"
 [metadata]
 difficulty = "hard"
 category = "trading"
+# The path is relative to the repository root. The hash pins the private inputs.
+default_release = "work/scenario-set/release"
+fixture_set_hash = "52bf96ae44a62b6a60c99da6c6b303de413befd262628ce9d8862d9f5d3a6ef6"
 
 [agent]
 timeout_sec = 7200.0

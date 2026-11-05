@@ -7,7 +7,7 @@ pub struct Evaluate {
     /// Task name under bench/tasks, or a task directory.
     #[arg(long)]
     pub task: PathBuf,
-    /// Frozen release directory (required for atomic-arb).
+    /// Override the frozen release selected by the atomic-arb task.
     #[arg(long)]
     pub release: Option<PathBuf>,
     #[arg(long, default_value = "codex")]
@@ -30,15 +30,50 @@ pub struct Evaluate {
     #[arg(long, requires = "resume")]
     pub retry_infrastructure: bool,
 }
+#[derive(serde::Deserialize)]
+struct AtomicArbTask {
+    metadata: FrozenScenarioSet,
+}
+
+#[derive(serde::Deserialize)]
+struct FrozenScenarioSet {
+    default_release: PathBuf,
+    fixture_set_hash: String,
+}
+
 pub fn run(args: Evaluate) -> Result<String> {
     let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
-    let task = if let Some(release) = &args.release {
+    let task_dir = if args.task.is_dir() {
+        args.task.clone()
+    } else {
+        repo.join("bench/tasks").join(&args.task)
+    };
+    let mut release = args.release;
+    let mut expected_set = None;
+    if release.is_none() && task_dir.file_name().is_some_and(|n| n == "atomic-arb") {
+        let path = task_dir.join("task.toml");
+        let task: AtomicArbTask = toml::from_str(
+            &std::fs::read_to_string(&path).with_context(|| format!("read {}", path.display()))?,
+        )
+        .context("read atomic-arb default release and fixture set from task metadata")?;
+        release = Some(repo.join(task.metadata.default_release));
+        expected_set = Some(task.metadata.fixture_set_hash);
+    }
+    let task = if let Some(release) = &release {
         ensure!(
             !release.join("FREEZE_FAILED").exists(),
             "release failed acceptance"
         );
         let metadata: serde_json::Value =
-            serde_json::from_slice(&std::fs::read(release.join("release.json"))?)?;
+            serde_json::from_slice(&std::fs::read(release.join("release.json"))
+                .with_context(|| format!("cannot read frozen release at {}; provide a validated local release with --release", release.display()))?)?;
+        if let Some(expected) = expected_set {
+            ensure!(
+                metadata["kind"] == "private-scenario-set"
+                    && metadata["fixture_set_hash"].as_str() == Some(&expected),
+                "default release differs from the scenario set pinned in atomic-arb/task.toml"
+            );
+        }
         if metadata["kind"] == "private-scenario-set" {
             ensure!(
                 args.task.file_name().is_some_and(|n| n == "atomic-arb"),
@@ -105,15 +140,7 @@ pub fn run(args: Evaluate) -> Result<String> {
         }
         release.join("task")
     } else {
-        ensure!(
-            args.task.file_name().is_none_or(|n| n != "atomic-arb"),
-            "atomic-arb requires --release with completed acceptance evidence"
-        );
-        if args.task.is_dir() {
-            args.task.clone()
-        } else {
-            repo.join("bench/tasks").join(&args.task)
-        }
+        task_dir
     };
     ensure!(task.join("task.toml").is_file(), "task.toml missing");
     ensure!(

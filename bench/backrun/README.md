@@ -52,11 +52,13 @@ contain only the initial pool playground, program binaries and filtered SDK.
 
 ```sh
 target/debug/mtx evaluate --task atomic-arb \
-  --release work/scenario-set-validation/release \
   --agent codex --model openai/gpt-6.1-terra --effort high \
   --jobs-dir work/amm-results --job-name terra-three-scenarios-001
 python3 -m json.tool work/amm-results/terra-three-scenarios-001/report.json
 ```
+
+The task manifest selects the default local release and pins its three-scenario
+fixture set by hash. Use `--release PATH` to select another validated release.
 
 `mtx evaluate` is the shared entry point. It uses one model development attempt,
 then fresh isolated Harbor sessions for the three scenarios. The two later
