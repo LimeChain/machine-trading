@@ -1,13 +1,15 @@
 //! Untrusted artifact inspection. Never runs candidate code in the grader.
-use crate::fixture::hash_file;
-use anyhow::{Result, ensure};
-use serde::{Deserialize, Serialize};
-use solana_pubkey::Pubkey;
 use std::{
     collections::BTreeSet,
     fs,
     path::{Path, PathBuf},
 };
+
+use anyhow::{Result, ensure};
+use serde::{Deserialize, Serialize};
+use solana_pubkey::Pubkey;
+
+use crate::fixture::hash_file;
 
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]

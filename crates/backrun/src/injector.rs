@@ -1,9 +1,11 @@
 //! Trusted swap injector. Fixed orders are signed and executed through the
 //! normal Surfpool transaction path at fixed slots during continuous trading.
-use crate::fixture::{PrivateFlow, hash_file};
+use std::{fs, path::Path};
+
 use anyhow::{Result, ensure};
 use serde::{Deserialize, Serialize};
-use std::{fs, path::Path};
+
+use crate::fixture::{PrivateFlow, hash_file};
 
 /// Pins existing assets without duplicating the order schedule in another file.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
@@ -104,9 +106,10 @@ impl<'a> SwapInjector<'a> {
         world: &crate::world::World,
         market: &crate::fixture::Market,
     ) -> Result<Vec<UserExecution>> {
-        use crate::{fixture::PoolKind, programs::*};
         use base64::{Engine, prelude::BASE64_STANDARD};
         use solana_signer::Signer;
+
+        use crate::{fixture::PoolKind, programs::*};
         ensure!(
             !self.failed,
             "injector stopped after an infrastructure error"

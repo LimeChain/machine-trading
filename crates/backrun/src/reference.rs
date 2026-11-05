@@ -1,15 +1,16 @@
 //! Fixed reference searchers. Approximate quotes rank candidate routes only;
 //! actual program simulation determines profit before a signed submission.
-use crate::{
-    fixture::{Leg, Market, PoolKind},
-    programs::*,
-    sdk::{Context, Observation},
-};
 use anyhow::{Context as _, Result};
 use base64::{Engine, prelude::BASE64_STANDARD};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use solana_signer::Signer;
+
+use crate::{
+    fixture::{Leg, Market, PoolKind},
+    programs::*,
+    sdk::{Context, Observation},
+};
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Strategy {

@@ -1,6 +1,7 @@
+use std::path::PathBuf;
+
 use anyhow::Result;
 use clap::Subcommand;
-use std::path::PathBuf;
 
 #[derive(Subcommand)]
 pub enum Command {

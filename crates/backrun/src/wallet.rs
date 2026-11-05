@@ -1,11 +1,13 @@
 //! Ordinary signer-owned accounts; the optional route executor imposes no policy.
-use crate::{FEE_LAMPORTS, TRADING_LAMPORTS, WSOL, fixture::Market, programs::*, world::World};
+use std::collections::BTreeMap;
+
 use anyhow::{Result, ensure};
 use solana_instruction::{AccountMeta, Instruction};
 use solana_keypair::Keypair;
 use solana_pubkey::Pubkey;
 use solana_signer::Signer;
-use std::collections::BTreeMap;
+
+use crate::{FEE_LAMPORTS, TRADING_LAMPORTS, WSOL, fixture::Market, programs::*, world::World};
 
 pub struct Wallet {
     pub trader: Keypair,

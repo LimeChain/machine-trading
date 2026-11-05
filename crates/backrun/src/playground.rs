@@ -1,10 +1,12 @@
+use std::path::Path;
+
+use anyhow::Result;
+use solana_signer::Signer;
+use surfpool_sdk::cheatcodes::builders::DeployProgram;
+
 use crate::{
     fixture::Market, runner::REFERENCE_EXECUTOR, sdk::Context, wallet::Wallet, world::World,
 };
-use anyhow::Result;
-use solana_signer::Signer;
-use std::path::Path;
-use surfpool_sdk::cheatcodes::builders::DeployProgram;
 
 pub async fn run(market: &Path, snapshot: &Path, programs: &Path, context: &Path) -> Result<()> {
     let mut market: Market = serde_json::from_slice(&std::fs::read(market)?)?;
@@ -19,13 +21,10 @@ pub async fn run(market: &Path, snapshot: &Path, programs: &Path, context: &Path
         .surfnet
         .cheatcodes()
         .time_travel_to_slot_at(100_000, 1_800_000_000_000)?;
-    for (id, file) in [(REFERENCE_EXECUTOR, "mth_backrun_executor.so")] {
-        world
-            .surfnet
-            .cheatcodes()
-            .deploy(DeployProgram::new(id).so_path(programs.join(file)))?;
-        world.make_immutable(id)?;
-    }
+    world.surfnet.cheatcodes().deploy(
+        DeployProgram::new(REFERENCE_EXECUTOR).so_path(programs.join("mth_backrun_executor.so")),
+    )?;
+    world.make_immutable(REFERENCE_EXECUTOR)?;
     let session = Wallet::prepare(&world, &market, REFERENCE_EXECUTOR).await?;
     let addresses = crate::wallet::lookup_addresses(&market, &session);
     let mut tables = vec![];

@@ -1,5 +1,21 @@
 //! Trusted fixed-flow driver. Candidate native code runs exclusively in a
 //! searcher container, never through Command::new or a shell in this process.
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    fs,
+    io::Write,
+    path::PathBuf,
+    time::{Duration, Instant},
+};
+
+use anyhow::{Context as _, Result, ensure};
+use base64::{Engine, prelude::BASE64_STANDARD};
+use serde_json::{Value, json};
+use solana_keypair::Keypair;
+use solana_pubkey::Pubkey;
+use solana_signer::Signer;
+use surfpool_sdk::cheatcodes::builders::DeployProgram;
+
 use crate::{
     artifact,
     fixture::{Market, PrivateFlow},
@@ -10,20 +26,6 @@ use crate::{
     wallet::Wallet,
     world::World,
 };
-use anyhow::{Context as _, Result, ensure};
-use base64::{Engine, prelude::BASE64_STANDARD};
-use serde_json::{Value, json};
-use solana_keypair::Keypair;
-use solana_pubkey::Pubkey;
-use solana_signer::Signer;
-use std::{
-    collections::{BTreeMap, BTreeSet},
-    fs,
-    io::Write,
-    path::PathBuf,
-    time::{Duration, Instant},
-};
-use surfpool_sdk::cheatcodes::builders::DeployProgram;
 
 pub const REFERENCE_EXECUTOR: Pubkey = Pubkey::new_from_array([69; 32]);
 pub struct Options {
@@ -116,13 +118,11 @@ async fn run(options: &Options) -> Result<Value> {
             );
         }
     };
-    for (id, file) in [(REFERENCE_EXECUTOR, "mth_backrun_executor.so")] {
-        world
-            .surfnet
-            .cheatcodes()
-            .deploy(DeployProgram::new(id).so_path(options.programs.join(file)))?;
-        world.make_immutable(id)?;
-    }
+    world.surfnet.cheatcodes().deploy(
+        DeployProgram::new(REFERENCE_EXECUTOR)
+            .so_path(options.programs.join("mth_backrun_executor.so")),
+    )?;
+    world.make_immutable(REFERENCE_EXECUTOR)?;
     for program in &manifest.programs {
         // Artifact shape/hash errors were rejected above. A trusted loader/RPC
         // failure here cannot be attributed to candidate misconduct.

@@ -1,14 +1,16 @@
+use std::{collections::BTreeMap, fs, path::Path};
+
+use anyhow::{Context, Result, ensure};
+use rand::{Rng, SeedableRng, rngs::StdRng};
+use solana_keypair::{Keypair, read_keypair_file};
+use solana_signer::Signer;
+
 use crate::{
     WSOL,
     fixture::{self, Leg, Market, PrivateFlow, UserOrder},
     programs::*,
     world::World,
 };
-use anyhow::{Context, Result, ensure};
-use rand::{Rng, SeedableRng, rngs::StdRng};
-use solana_keypair::{Keypair, read_keypair_file};
-use solana_signer::Signer;
-use std::{collections::BTreeMap, fs, path::Path};
 
 pub async fn build(
     programs: &Path,
@@ -477,13 +479,12 @@ pub fn public(fixture: &Path, out: &Path) -> Result<()> {
     }
     allowed.insert(pda(key(crate::CPMM), &[b"vault_and_lp_mint_auth_seed"]).to_string());
     for (address, account) in &snapshot {
-        if let Some(account) = account {
-            if account.executable
+        if let Some(account) = account
+            && (account.executable
                 || account.owner.starts_with("BPFLoader")
-                || account.owner.starts_with("LoaderV4")
-            {
-                allowed.insert(address.clone());
-            }
+                || account.owner.starts_with("LoaderV4"))
+        {
+            allowed.insert(address.clone());
         }
     }
     let public = snapshot

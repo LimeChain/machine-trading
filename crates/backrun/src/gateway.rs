@@ -1,6 +1,10 @@
 //! Authenticated, bounded proxy to Surfpool's native processed-state RPC.
 //! No auction, pool snapshot cache, transaction policy, or fee ordering.
-use crate::sdk::Context;
+use std::{
+    sync::{Arc, Mutex},
+    time::{Duration, Instant},
+};
+
 use anyhow::{Result, ensure};
 use axum::{
     Json, Router,
@@ -14,11 +18,9 @@ use axum::{
 };
 use futures::{SinkExt, StreamExt};
 use serde_json::{Value, json};
-use std::{
-    sync::{Arc, Mutex},
-    time::{Duration, Instant},
-};
 use tokio::sync::Semaphore;
+
+use crate::sdk::Context;
 
 pub struct StateData {
     pub ready: [bool; 4],
@@ -293,27 +295,6 @@ async fn ws(State(g): State<Arc<Gateway>>, h: HeaderMap, upgrade: WebSocketUpgra
         }
     })
 }
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn native_transactions_allowed_but_administration_is_not() {
-        assert!(validate(&json!({"method":"sendTransaction","params":["wire",{"skipPreflight":true,"encoding":"base64"}]}),false).is_ok());
-        for method in ["requestAirdrop", "surfnet_setAccount", "submitBatch"] {
-            assert!(validate(&json!({"method":method}), false).is_err());
-        }
-        assert!(
-            validate(
-                &json!({"method":"sendTransaction","params":["wire",{"skipSigVerify":true}]}),
-                false
-            )
-            .is_err()
-        );
-        assert!(validate(&json!({"method":"accountSubscribe"}), true).is_ok());
-        assert!(validate(&json!({"method":"sendTransaction"}), true).is_err());
-    }
-}
-
 async fn exited(
     State(g): State<Arc<Gateway>>,
     h: HeaderMap,
@@ -335,4 +316,25 @@ pub fn submission_signature(record: &Value) -> Option<String> {
     let tx: solana_transaction::versioned::VersionedTransaction =
         wincode::deserialize(&bytes).ok()?;
     tx.signatures.first().map(ToString::to_string)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn native_transactions_allowed_but_administration_is_not() {
+        assert!(validate(&json!({"method":"sendTransaction","params":["wire",{"skipPreflight":true,"encoding":"base64"}]}),false).is_ok());
+        for method in ["requestAirdrop", "surfnet_setAccount", "submitBatch"] {
+            assert!(validate(&json!({"method":method}), false).is_err());
+        }
+        assert!(
+            validate(
+                &json!({"method":"sendTransaction","params":["wire",{"skipSigVerify":true}]}),
+                false
+            )
+            .is_err()
+        );
+        assert!(validate(&json!({"method":"accountSubscribe"}), true).is_ok());
+        assert!(validate(&json!({"method":"sendTransaction"}), true).is_err());
+    }
 }

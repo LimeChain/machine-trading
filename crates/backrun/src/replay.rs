@@ -1,14 +1,16 @@
 //! Maintainer-only exact replay. Reuses signed transactions in their recorded
 //! order, with signature/blockhash checks enabled and no simulated fills.
-use crate::world::World;
-use anyhow::{Context, Result, ensure};
-use base64::{Engine, prelude::BASE64_STANDARD};
-use serde_json::{Value, json};
 use std::{
     fs,
     io::{BufRead, BufReader},
     path::Path,
 };
+
+use anyhow::{Context, Result, ensure};
+use base64::{Engine, prelude::BASE64_STANDARD};
+use serde_json::{Value, json};
+
+use crate::world::World;
 
 pub async fn replay(root: &Path) -> Result<Value> {
     let metadata: Value = serde_json::from_slice(&fs::read(root.join("replay.json"))?)?;

@@ -1,7 +1,8 @@
 //! Shared Harbor launcher: one development attempt, then isolated evaluation sessions.
+use std::{path::PathBuf, process::Command};
+
 use anyhow::{Context, Result, ensure};
 use clap::Args;
-use std::{path::PathBuf, process::Command};
 #[derive(Args)]
 pub struct Evaluate {
     /// Task name under bench/tasks, or a task directory.

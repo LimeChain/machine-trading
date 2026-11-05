@@ -49,33 +49,6 @@ impl Score {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::{FEE_LAMPORTS, TRADING_LAMPORTS};
-    #[test]
-    fn fees_are_not_subtracted_twice_and_losses_are_preserved() {
-        let nop = Balances {
-            sol_lamports: FEE_LAMPORTS,
-            wsol_lamports: TRADING_LAMPORTS,
-        };
-        assert_eq!(Score::from_balances(&nop, 0, 0, None).unwrap().reward, 0.0);
-        let failed = Balances {
-            sol_lamports: FEE_LAMPORTS - 10_000,
-            ..nop
-        };
-        let score = Score::from_balances(&failed, 10_000, 5_000, None).unwrap();
-        assert_eq!(score.net_profit_lamports, -10_000);
-        assert_eq!(score.gross_trading_profit_lamports, 0);
-        assert!(score.reward < 0.0);
-        let empty = Balances {
-            sol_lamports: 0,
-            wsol_lamports: 0,
-        };
-        assert!(Score::from_balances(&empty, 0, 0, None).unwrap().reward > DISQUALIFIED_REWARD);
-    }
-}
-
 /// Realizable native capital. Token account lamports include native backing
 /// (WSOL) and refundable rent; other token amounts and LP positions get no credit.
 /// Counting the same accounts at both endpoints prevents setup-rent harvesting.
@@ -142,4 +115,31 @@ pub fn priority_fee(
     total
         .checked_sub(base)
         .ok_or_else(|| anyhow::anyhow!("runtime fee lower than signature fee"))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{FEE_LAMPORTS, TRADING_LAMPORTS};
+    #[test]
+    fn fees_are_not_subtracted_twice_and_losses_are_preserved() {
+        let nop = Balances {
+            sol_lamports: FEE_LAMPORTS,
+            wsol_lamports: TRADING_LAMPORTS,
+        };
+        assert_eq!(Score::from_balances(&nop, 0, 0, None).unwrap().reward, 0.0);
+        let failed = Balances {
+            sol_lamports: FEE_LAMPORTS - 10_000,
+            ..nop
+        };
+        let score = Score::from_balances(&failed, 10_000, 5_000, None).unwrap();
+        assert_eq!(score.net_profit_lamports, -10_000);
+        assert_eq!(score.gross_trading_profit_lamports, 0);
+        assert!(score.reward < 0.0);
+        let empty = Balances {
+            sol_lamports: 0,
+            wsol_lamports: 0,
+        };
+        assert!(Score::from_balances(&empty, 0, 0, None).unwrap().reward > DISQUALIFIED_REWARD);
+    }
 }

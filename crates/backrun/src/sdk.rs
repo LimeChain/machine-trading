@@ -1,10 +1,11 @@
 //! Native bot contract. Context contains only this searcher's signing key and
 //! public setup; observations never include pending orders or rival bids.
-use crate::{fixture::Market, programs::key, wallet::Wallet};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use solana_message::AddressLookupTableAccount;
 use solana_signer::Signer;
+
+use crate::{fixture::Market, programs::key, wallet::Wallet};
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Table {

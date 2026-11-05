@@ -1,8 +1,9 @@
 //! Requires binaries built from the pinned upstream sources; never substitutes mocks.
+use std::path::PathBuf;
+
 use mth_backrun::{WSOL, world::World};
 use solana_keypair::read_keypair_file;
 use solana_signer::Signer;
-use std::path::PathBuf;
 
 #[tokio::test(flavor = "multi_thread")]
 #[ignore = "requires MTH_BACKRUN_PROGRAMS, MTH_CPMM_ADMIN, MTH_ORCA_ADMIN"]

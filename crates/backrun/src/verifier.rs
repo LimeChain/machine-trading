@@ -1,9 +1,11 @@
 //! Post-session verification from trusted snapshots and native ledger receipts.
-use crate::score::Score;
+use std::{collections::BTreeSet, fs, path::Path};
+
 use anyhow::{Context, Result, ensure};
 use base64::{Engine, prelude::BASE64_STANDARD};
 use serde_json::{Value, json};
-use std::{collections::BTreeSet, fs, path::Path};
+
+use crate::score::Score;
 pub fn grade(root: &Path, fixture: &Path) -> Result<Value> {
     ensure!(
         !root.join("infrastructure-error.json").exists(),

@@ -1,7 +1,8 @@
 //! Parser/firewall tests do not execute these synthetic ELF headers.
+use std::{collections::BTreeSet, fs};
+
 use mth_backrun::{artifact, fixture::hash_file};
 use solana_pubkey::Pubkey;
-use std::{collections::BTreeSet, fs};
 
 fn artifact() -> (tempfile::TempDir, serde_json::Value, Pubkey) {
     let dir = tempfile::tempdir().unwrap();
