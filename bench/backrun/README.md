@@ -3,7 +3,7 @@
 Version 0.5 evaluates one submitted artifact against three private fixed flows.
 The original frozen 0.4 release and Terra result remain unchanged. See the
 [design record](DESIGN.md) for the private regimes and the
-[task contract](../tasks/atomic-backrun/instruction.md) for what an agent sees.
+[task contract](../tasks/atomic-arb/instruction.md) for what an agent sees.
 
 ## Build and validate a release
 
@@ -51,7 +51,7 @@ contain only the initial pool playground, program binaries and filtered SDK.
 ## Run Terra once, evaluate all three
 
 ```sh
-target/debug/mtx evaluate --task atomic-backrun \
+target/debug/mtx evaluate --task atomic-arb \
   --release work/scenario-set-validation/release \
   --agent codex --model openai/gpt-6.1-terra --effort high \
   --jobs-dir work/amm-results --job-name terra-three-scenarios-001
@@ -100,3 +100,7 @@ command with `--resume --retry-infrastructure`. Completed scored sessions are
 reused, never repeated. The submitted artifact stays identical; only sessions
 with a recorded infrastructure failure and no score may be retried. All attempts
 remain in the job directory. Disqualified artifacts cannot be retried this way.
+
+The public task is named `atomic-arb`. Previously frozen releases retain their
+historical `atomic-backrun` metadata and checksums and remain runnable with
+`--task atomic-arb`; new packages use the new name.

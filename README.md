@@ -54,7 +54,7 @@ harbor run -d solana-foundation/machine-trading -a claude-code -m anthropic/clau
 | [📉 `phoenix-flash-crash`](bench/tasks/phoenix-flash-crash) | fades crashes and squeezes on the SPCX perp that revert, and survives the ones that don't |
 | [⚖️ `phoenix-market-making`](bench/tasks/phoenix-market-making) | earns the SPCX spread from noise, and steps back before informed flow |
 
-A locally packaged [continuous AMM task](bench/tasks/atomic-backrun) runs one
+A locally packaged [continuous AMM task](bench/tasks/atomic-arb) runs one
 submitted artifact against three private fixed flows on 128 pools, using
 `mtx evaluate`. It reports signed SOL profit separately for each scenario and
 uses its own isolated execution/scoring contract.

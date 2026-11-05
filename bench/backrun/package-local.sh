@@ -16,7 +16,7 @@ fi
 mkdir -p "$root/verifier/fixture" "$root/verifier/programs"
 cp "$fixture"/*.json "$root/verifier/fixture/"
 cp "$programs"/*.so "$programs/manifest.json" "$root/verifier/programs/"
-cp "$repo/bench/tasks/atomic-backrun/tests/test.sh" "$root/verifier/test.sh"
+cp "$repo/bench/tasks/atomic-arb/tests/test.sh" "$root/verifier/test.sh"
 cat > "$root/verifier/Dockerfile" <<'EOF'
 FROM mth-backrun-runtime:local
 COPY fixture /private/fixture

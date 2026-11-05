@@ -1,4 +1,4 @@
-# Continuous AMM trading: `atomic-backrun`
+# Continuous AMM trading: `atomic-arb`
 
 An agent builds one native Solana bot, then the same artifact trades three
 private fixed flows on 128 real AMM pools. This task is packaged locally; it is
@@ -62,7 +62,7 @@ confidence in a universal ranking.
 After a maintainer freezes a local release:
 
 ```sh
-mtx evaluate --task atomic-backrun \
+mtx evaluate --task atomic-arb \
   --release work/scenario-set/release \
   --agent codex --model openai/gpt-6.1-terra --effort high \
   --jobs-dir work/amm-results --job-name terra-three-scenarios-001

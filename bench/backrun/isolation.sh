@@ -4,7 +4,7 @@ set -euo pipefail
 repo=$(cd "$(dirname "$0")/../.." && pwd)
 cd "$repo"
 project="backrun-isolation-$$"
-compose=${MTH_BACKRUN_COMPOSE:-bench/tasks/atomic-backrun/tests/docker-compose.yaml}
+compose=${MTH_BACKRUN_COMPOSE:-bench/tasks/atomic-arb/tests/docker-compose.yaml}
 trap 'docker compose -p "$project" -f "$compose" down -v >/dev/null 2>&1 || true' EXIT
 docker compose -p "$project" -f "$compose" up -d --pull never >&2
 docker exec -d "$project-main-1" sh -c 'mth-backrun playground --market /private/fixture/market.json --snapshot /private/fixture/snapshot.json --programs /private/programs --context /tmp/context.json > /tmp/playground.log 2>&1'

@@ -7,7 +7,7 @@ pub struct Evaluate {
     /// Task name under bench/tasks, or a task directory.
     #[arg(long)]
     pub task: PathBuf,
-    /// Frozen release directory (required for atomic-backrun).
+    /// Frozen release directory (required for atomic-arb).
     #[arg(long)]
     pub release: Option<PathBuf>,
     #[arg(long, default_value = "codex")]
@@ -41,8 +41,8 @@ pub fn run(args: Evaluate) -> Result<String> {
             serde_json::from_slice(&std::fs::read(release.join("release.json"))?)?;
         if metadata["kind"] == "private-scenario-set" {
             ensure!(
-                args.task.file_name().is_some_and(|n| n == "atomic-backrun"),
-                "release belongs to atomic-backrun"
+                args.task.file_name().is_some_and(|n| n == "atomic-arb"),
+                "release belongs to atomic-arb"
             );
             let mut command = Command::new("python3");
             command
@@ -86,8 +86,8 @@ pub fn run(args: Evaluate) -> Result<String> {
             "use a validated continuous-arrival release"
         );
         ensure!(
-            args.task.file_name().is_some_and(|n| n == "atomic-backrun"),
-            "release belongs to atomic-backrun"
+            args.task.file_name().is_some_and(|n| n == "atomic-arb"),
+            "release belongs to atomic-arb"
         );
         for image in metadata["images"]
             .as_object()
@@ -106,8 +106,8 @@ pub fn run(args: Evaluate) -> Result<String> {
         release.join("task")
     } else {
         ensure!(
-            args.task.file_name().is_none_or(|n| n != "atomic-backrun"),
-            "atomic-backrun requires --release with completed acceptance evidence"
+            args.task.file_name().is_none_or(|n| n != "atomic-arb"),
+            "atomic-arb requires --release with completed acceptance evidence"
         );
         if args.task.is_dir() {
             args.task.clone()

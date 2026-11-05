@@ -46,13 +46,13 @@ def package(args):
         (context/'programs').mkdir()
         for p in programs.iterdir():
             if p.suffix=='.so' or p.name=='manifest.json':shutil.copy2(p,context/'programs'/p.name)
-        shutil.copy2(repo/'bench/tasks/atomic-backrun/tests/test.sh',context/'test.sh')
+        shutil.copy2(repo/'bench/tasks/atomic-arb/tests/test.sh',context/'test.sh')
         (context/'Dockerfile').write_text(f"FROM {build_base(images['runtime'])}\nCOPY fixture /private/fixture\nCOPY programs /private/programs\nCOPY test.sh /tests/test.sh\nRUN chmod -R go-rwx /private\n")
         identifier=root/(sid+'.id')
         subprocess.run(['docker','build','--iidfile',str(identifier),str(context)],check=True)
         images[sid]=identifier.read_text().strip()
         task=root/'tasks'/sid
-        shutil.copytree(repo/'bench/tasks/atomic-backrun',task,ignore=shutil.ignore_patterns('artifact','__pycache__'))
+        shutil.copytree(repo/'bench/tasks/atomic-arb',task,ignore=shutil.ignore_patterns('artifact','__pycache__'))
         mapping={'mth-backrun-runtime:local':images['runtime'],'mth-backrun-candidate:local':images['candidate'],
                  'mth-backrun-verifier:local':images[sid],'mth-backrun-development:local':images['development']}
         for name in ['tests/docker-compose.yaml','task.toml','environment/Dockerfile']:

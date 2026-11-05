@@ -14,7 +14,7 @@ Planned tasks are
 [issues labelled `new task`](https://github.com/lgalabru/machine-trading/issues?q=label%3A%22new+task%22).
 Every release is in the [changelog](CHANGELOG.md).
 
-The locally packaged [`atomic-backrun`](atomic-backrun) task has a separate
+The locally packaged [`atomic-arb`](atomic-arb) task has a separate
 continuous execution contract and three per-scenario signed SOL results. The
 following shared grading/session description applies to the Phoenix tasks.
 

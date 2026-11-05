@@ -22,7 +22,7 @@ a = p.parse_args()
 # Retained for provenance of legacy releases. A current task promises three
 # sessions, so freezing it with a single fixture would misstate the contract.
 import tomllib
-if tomllib.loads(pathlib.Path('bench/tasks/atomic-backrun/task.toml').read_text())['task']['version'] != '0.4.0':
+if tomllib.loads(pathlib.Path('bench/tasks/atomic-arb/task.toml').read_text())['task']['version'] != '0.4.0':
     raise SystemExit('Use freeze_set.py for the current three-scenario task; legacy releases remain unchanged.')
 
 def read(name):
@@ -67,14 +67,14 @@ try:
         image = f'mth-backrun-{name}:local'
         images[image] = json.loads(subprocess.check_output(['docker', 'image', 'inspect', image], text=True))[0]['Id']
     sources = {}
-    for directory in ['crates/backrun', 'programs/backrun-executor', 'bench/backrun', 'bench/tasks/atomic-backrun']:
+    for directory in ['crates/backrun', 'programs/backrun-executor', 'bench/backrun', 'bench/tasks/atomic-arb']:
         for path in pathlib.Path(directory).rglob('*'):
             if path.is_file() and not any(part in ['target','artifact','__pycache__'] for part in path.parts):
                 sources[str(path)] = digest(path)
     for name in ['Cargo.toml', 'Cargo.lock', 'crates/cli/Cargo.toml', 'crates/cli/src/main.rs', 'crates/cli/src/evaluate.rs']:
         sources[name] = digest(pathlib.Path(name))
     # A runnable release task references immutable local image IDs, not tags.
-    shutil.copytree('bench/tasks/atomic-backrun', a.out / 'task', ignore=shutil.ignore_patterns('artifact', '__pycache__'))
+    shutil.copytree('bench/tasks/atomic-arb', a.out / 'task', ignore=shutil.ignore_patterns('artifact', '__pycache__'))
     compose = a.out / 'task/tests/docker-compose.yaml'
     text = compose.read_text()
     for name, identifier in images.items():

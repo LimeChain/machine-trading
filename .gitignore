@@ -18,5 +18,5 @@ __pycache__/
 # Local AMM benchmark artifacts and private fixtures.
 /programs/*/target
 /work
-/bench/tasks/atomic-backrun/private
-/bench/tasks/atomic-backrun/solution/artifact
+/bench/tasks/atomic-arb/private
+/bench/tasks/atomic-arb/solution/artifact
