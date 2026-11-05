@@ -23,6 +23,9 @@ pub struct Evaluate {
     /// Validate inputs and print the command without running the agent.
     #[arg(long)]
     pub dry_run: bool,
+    /// Follow live progress of an existing scenario-set job. Ctrl-C disconnects.
+    #[arg(long, conflicts_with_all = ["resume", "dry_run"])]
+    pub follow: bool,
     /// Reuse completed sessions from this same scenario-set job.
     #[arg(long)]
     pub resume: bool,
@@ -48,6 +51,22 @@ pub fn run(args: Evaluate) -> Result<String> {
     } else {
         repo.join("bench/tasks").join(&args.task)
     };
+    if args.follow {
+        ensure!(
+            task_dir.file_name().is_some_and(|n| n == "atomic-arb"),
+            "--follow requires atomic-arb"
+        );
+        let status = Command::new("python3")
+            .arg(repo.join("bench/backrun/live_evaluate.py"))
+            .arg("--follow")
+            .arg("--jobs-dir")
+            .arg(&args.jobs_dir)
+            .arg("--job-name")
+            .arg(&args.job_name)
+            .status()?;
+        ensure!(status.success(), "could not follow evaluation job");
+        return Ok(String::new());
+    }
     let mut release = args.release;
     let mut expected_set = None;
     if release.is_none() && task_dir.file_name().is_some_and(|n| n == "atomic-arb") {
@@ -81,7 +100,7 @@ pub fn run(args: Evaluate) -> Result<String> {
             );
             let mut command = Command::new("python3");
             command
-                .arg(repo.join("bench/backrun/evaluate_set.py"))
+                .arg(repo.join("bench/backrun/live_evaluate.py"))
                 .arg("--release")
                 .arg(release)
                 .arg("--jobs-dir")

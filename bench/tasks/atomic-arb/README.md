@@ -76,7 +76,17 @@ Use `target/debug/mtx` if the new CLI has not been installed. Docker must have
 Harbor copy-only stages reuse its artifact without invoking a model or building
 again. Candidate code executes only in isolated searcher containers.
 
-The command prints per-scenario results and the combined report path. Its
+The terminal shows Harbor setup and verifier progress, the active scenario,
+and recent Codex tool activity during development. To watch an existing job
+from a second terminal, run:
+
+```sh
+mtx evaluate --task atomic-arb --jobs-dir work/amm-results \
+  --job-name terra-three-scenarios-001 --follow
+```
+
+Ctrl-C disconnects this observer. The command that launched the job prints
+per-scenario results and the combined report path. Its
 `scenarios` entries link to full verifier reports; `harbor/` retains all trials.
 A raw `harbor run` against one packaged subtask evaluates only that one session;
 use `mtx evaluate` to run the complete set. Existing Phoenix review UI integration
