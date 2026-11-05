@@ -1,11 +1,13 @@
 """Terminal presentation for the frozen scenario coordinator. --follow is read-only."""
 import argparse
+from contextlib import redirect_stdout
 import json
 import os
 from pathlib import Path
 import re
 import subprocess
 import sys
+import tempfile
 import threading
 import time
 
@@ -18,6 +20,55 @@ def json_file(path):
     except (FileNotFoundError, ValueError):
         # The coordinator and Harbor update their reports while we read them.
         return {}
+
+
+def scenario_names(scenarios):
+    return {s['id']: s['regime'] for s in scenarios if s.get('regime')}
+
+
+def named_rewards(rewards, names):
+    return {names.get(key, key): value for key, value in rewards.items()}
+
+
+def finalize_report(path):
+    """Give the operator's summary named scores. Harbor trial records keep their IDs."""
+    report = json_file(path)
+    if report.get('status') not in ('complete', 'incomplete', 'disqualified'):
+        return
+    rewards = named_rewards(report['reward_by_scenario'], scenario_names(report['scenarios']))
+    if rewards == report['reward_by_scenario']:
+        return
+    report['reward_by_scenario'] = rewards
+    with tempfile.NamedTemporaryFile(mode='w', dir=path.parent, delete=False) as tmp:
+        try:
+            json.dump(report, tmp, indent=2)
+            tmp.write('\n')
+            tmp.flush()
+            os.replace(tmp.name, path)
+        finally:
+            Path(tmp.name).unlink(missing_ok=True)
+
+
+class ScenarioConsole:
+    """Render the frozen coordinator's operator messages using release names."""
+    def __init__(self, stream, names):
+        self.stream = stream
+        self.names = names
+
+    def write(self, message):
+        if message.startswith('{'):
+            payload = json.loads(message)
+            if 'reward_by_scenario' in payload:
+                payload['reward_by_scenario'] = named_rewards(payload['reward_by_scenario'], self.names)
+                message = json.dumps(payload, indent=2)
+        else:
+            sid, sep, details = message.partition(': ')
+            if sep and sid in self.names:
+                message = self.names[sid] + sep + details
+        return self.stream.write(message)
+
+    def flush(self):
+        self.stream.flush()
 
 
 def docker(*args):
@@ -63,7 +114,8 @@ def latest_activity(data):
 
 
 class Display:
-    def __init__(self, root, follow):
+    def __init__(self, root, follow, names):
+        self.names = names
         self.root = root
         self.follow = follow
         # Existing attempts may be large and already scored when resuming.
@@ -91,7 +143,8 @@ class Display:
         status = report.get('status')
         if status in ('complete', 'incomplete', 'disqualified'):
             if self.follow:
-                print(f"Job {status}: {report.get('reward_by_scenario', {})}", flush=True)
+                rewards = named_rewards(report.get('reward_by_scenario', {}), scenario_names(report.get('scenarios', [])))
+                print(f"Job {status}: {rewards}", flush=True)
             return True
         now = time.monotonic()
         attempts = report.get('attempts', {})
@@ -123,7 +176,8 @@ class Display:
                     phase = 'preparing submitted bot for evaluation'
         state = sid, phase, event
         if state != self.last_state or now - self.last_print >= 30:
-            print(f'[{sid} of 3] {phase}', file=sys.stderr, flush=True)
+            label = self.names.get(sid, sid)
+            print(f'[{label}] {phase}', file=sys.stderr, flush=True)
             self.last_print, self.last_state = now, state
         return False
 
@@ -133,9 +187,12 @@ def main():
     parser.add_argument('--jobs-dir', type=Path, required=True)
     parser.add_argument('--job-name', required=True)
     parser.add_argument('--follow', action='store_true')
+    parser.add_argument('--release', type=Path)
     args, _ = parser.parse_known_args()
     root = args.jobs_dir/args.job_name
-    display = Display(root, args.follow)
+    manifest = json_file(args.release/'release.json') if args.release else {}
+    names = scenario_names(manifest.get('scenarios', []))
+    display = Display(root, args.follow, names)
     if args.follow:
         if not (root/'report.json').is_file():
             raise SystemExit(f'No existing evaluation report at {root}/report.json')
@@ -162,11 +219,13 @@ def main():
     thread = threading.Thread(target=monitor, daemon=True)
     thread.start()
     try:
-        evaluate_set.main()
+        with redirect_stdout(ScenarioConsole(sys.stdout, names)):
+            evaluate_set.main()
     finally:
         stop.set()
         thread.join()
         display.update(final=True)
+        finalize_report(root/'report.json')
 
 
 if __name__ == '__main__':

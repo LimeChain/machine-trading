@@ -86,7 +86,12 @@ mtx evaluate --task atomic-arb --jobs-dir work/amm-results \
 ```
 
 Ctrl-C disconnects this observer. The command that launched the job prints
-per-scenario results and the combined report path. Its
+per-scenario results and the combined report path. The terminal summary and
+finished job report key each score by the release's scenario name. Each
+individual report still has its Harbor trial ID. Harbor's agent column describes
+who populated the trial workspace: Codex builds the bot once, then the
+`oracle` copy step installs that same artifact for the later trials. The
+verifiers record its hash in every scenario. Its
 `scenarios` entries link to full verifier reports; `harbor/` retains all trials.
 A raw `harbor run` against one packaged subtask evaluates only that one session;
 use `mtx evaluate` to run the complete set. Existing Phoenix review UI integration
